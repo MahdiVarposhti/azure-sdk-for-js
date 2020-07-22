@@ -304,7 +304,7 @@ export interface SignedIdentifier {
 // @public
 export class TableClient {
     constructor(url: string, tableName: string, options?: TableServiceClientOptions);
-    createEntity(entity?: Entity, options?: CreateEntityOptions): Promise<CreateEntityResponse>;
+    createEntity(entity: Entity, options?: CreateEntityOptions): Promise<CreateEntityResponse>;
     deleteEntity(partitionKey: string, rowKey: string, ifMatch: string, options?: DeleteEntityOptions): Promise<DeleteEntityResponse>;
     getAccessPolicy(options?: GetAccessPolicyOptions): Promise<GetAccessPolicyResponse>;
     getEntity(partitionKey: string, rowKey: string, options?: GetEntityOptions): Promise<GetEntityResponse>;
@@ -486,7 +486,7 @@ export interface TableResponseProperties {
 // @public
 export class TableServiceClient {
     constructor(url: string, options?: TableServiceClientOptions);
-    createEntity(tableName: string, entity?: Entity, options?: CreateEntityOptions): Promise<CreateEntityResponse>;
+    createEntity(tableName: string, entity: Entity, options?: CreateEntityOptions): Promise<CreateEntityResponse>;
     createTable(tableName: string, options?: CreateTableOptions): Promise<CreateTableResponse>;
     deleteEntity(tableName: string, partitionKey: string, rowKey: string, ifMatch: string, options?: DeleteEntityOptions): Promise<DeleteEntityResponse>;
     deleteTable(tableName: string, options?: DeleteTableOptions): Promise<DeleteTableResponse>;
