@@ -41,6 +41,7 @@ import {
   SignedIdentifier,
   SetAccessPolicyResponse
 } from "./generatedModels";
+import { serialize } from "./serialization";
 
 /**
  * A TableServiceClient represents a Client to the Azure Tables service allowing you
@@ -174,7 +175,10 @@ export class TableServiceClient {
     entity: Entity,
     options?: CreateEntityOptions
   ): Promise<CreateEntityResponse> {
-    return this.table.insertEntity(tableName, { tableEntityProperties: entity, ...options });
+    return this.table.insertEntity(tableName, {
+      tableEntityProperties: serialize(entity),
+      ...options
+    });
   }
 
   /**
@@ -211,7 +215,7 @@ export class TableServiceClient {
     options?: UpdateEntityOptions
   ): Promise<UpdateEntityResponse> {
     return this.table.updateEntity(tableName, entity.PartitionKey, entity.RowKey, {
-      tableEntityProperties: entity,
+      tableEntityProperties: serialize(entity),
       ifMatch,
       ...options
     });
@@ -231,7 +235,7 @@ export class TableServiceClient {
     options?: MergeEntityOptions
   ): Promise<MergeEntityResponse> {
     return this.table.mergeEntity(tableName, entity.PartitionKey, entity.RowKey, {
-      tableEntityProperties: entity,
+      tableEntityProperties: serialize(entity),
       ifMatch,
       ...options
     });
