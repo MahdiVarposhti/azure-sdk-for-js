@@ -41,7 +41,7 @@ import {
   SignedIdentifier,
   SetAccessPolicyResponse
 } from "./generatedModels";
-import { serialize } from "./serialization";
+import { serialize, deserializeObjectsArray } from "./serialization";
 
 /**
  * A TableServiceClient represents a Client to the Azure Tables service allowing you
@@ -140,13 +140,22 @@ export class TableServiceClient {
    * @param rowKey The row key of the entity.
    * @param options The options parameters.
    */
-  public getEntity(
+  public async getEntity(
     tableName: string,
     partitionKey: string,
     rowKey: string,
     options?: GetEntityOptions
   ): Promise<GetEntityResponse> {
-    return this.table.queryEntitiesWithPartitionAndRowKey(tableName, partitionKey, rowKey, options);
+    const response = await this.table.queryEntitiesWithPartitionAndRowKey(
+      tableName,
+      partitionKey,
+      rowKey,
+      options
+    );
+    if (response.value !== undefined) {
+      response.value = deserializeObjectsArray(response.value) as any;
+    }
+    return response;
   }
 
   /**
@@ -155,13 +164,17 @@ export class TableServiceClient {
    * @param query The OData query parameters.
    * @param options The options parameters.
    */
-  public listEntities(
+  public async listEntities(
     tableName: string,
     // eslint-disable-next-line @azure/azure-sdk/ts-naming-options
     query?: QueryOptions,
     options?: ListEntitiesOptions
   ): Promise<ListEntitiesResponse> {
-    return this.table.queryEntities(tableName, { queryOptions: query, ...options });
+    const response = await this.table.queryEntities(tableName, { queryOptions: query, ...options });
+    if (response.value !== undefined) {
+      response.value = deserializeObjectsArray(response.value) as any;
+    }
+    return response;
   }
 
   /**
