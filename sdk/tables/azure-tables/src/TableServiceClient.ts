@@ -152,7 +152,7 @@ export class TableServiceClient {
       rowKey,
       options
     );
-    response.value = deserialize(response._response.parsedBody) as any;
+    response.value = deserialize(response._response.parsedBody) as object[];
     return response;
   }
 
