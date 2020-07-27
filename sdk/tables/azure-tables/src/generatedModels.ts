@@ -15,7 +15,7 @@ export {
   TableDeleteOptionalParams as DeleteTableOptions,
   TableDeleteResponse as DeleteTableResponse,
   TableQueryOptionalParams,
-  QueryOptions,
+  QueryOptions as GeneratedQueryOptions,
   TableQueryOperationResponse as ListTablesResponse,
   TableQueryEntitiesWithPartitionAndRowKeyOptionalParams as GetEntityOptions,
   TableQueryEntitiesWithPartitionAndRowKeyResponse,

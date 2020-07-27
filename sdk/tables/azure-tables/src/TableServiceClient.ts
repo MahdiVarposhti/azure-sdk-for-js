@@ -6,6 +6,7 @@ import { Service } from "./generated/operations";
 import { Table } from "./generated/operations";
 import {
   Entity,
+  QueryOptions,
   ListTablesOptions,
   ListEntitiesOptions,
   GetEntityResponse,
@@ -28,7 +29,7 @@ import {
   CreateTableResponse,
   DeleteTableOptions,
   DeleteTableResponse,
-  QueryOptions,
+  GeneratedQueryOptions,
   ListTablesResponse,
   GetEntityOptions,
   CreateEntityResponse,
@@ -130,7 +131,7 @@ export class TableServiceClient {
     query?: QueryOptions,
     options?: ListTablesOptions
   ): Promise<ListTablesResponse> {
-    return this.table.query({ queryOptions: query, ...options });
+    return this.table.query({ queryOptions: this.convertQueryOptions(query), ...options });
   }
 
   /**
@@ -169,7 +170,7 @@ export class TableServiceClient {
     options?: ListEntitiesOptions
   ): Promise<ListEntitiesResponse<T>> {
     const response = (await this.table.queryEntities(tableName, {
-      queryOptions: query,
+      queryOptions: this.convertQueryOptions(query),
       ...options
     })) as ListEntitiesResponse<T>;
     response.value = deserializeObjectsArray<T>(response.value);
@@ -278,5 +279,13 @@ export class TableServiceClient {
     options?: SetAccessPolicyOptions
   ): Promise<SetAccessPolicyResponse> {
     return this.table.setAccessPolicy(tableName, { tableAcl: acl, ...options });
+  }
+
+  private convertQueryOptions(query: QueryOptions = {}): GeneratedQueryOptions {
+    const mappedQuery: any = { ...query };
+    if (mappedQuery.select) {
+      mappedQuery.select = mappedQuery.select.join(",");
+    }
+    return mappedQuery;
   }
 }

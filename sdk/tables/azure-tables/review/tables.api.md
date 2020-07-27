@@ -40,7 +40,7 @@ export type CreateEntityResponse = TableInsertEntityHeaders & {
 
 // @public
 export interface CreateTableOptions extends coreHttp.OperationOptions {
-    queryOptions?: QueryOptions;
+    queryOptions?: GeneratedQueryOptions;
     requestId?: string;
     responsePreference?: ResponseFormat;
 }
@@ -56,7 +56,7 @@ export type CreateTableResponse = TableCreateHeaders & TableResponse & {
 
 // @public
 export interface DeleteEntityOptions extends coreHttp.OperationOptions {
-    queryOptions?: QueryOptions;
+    queryOptions?: GeneratedQueryOptions;
     requestId?: string;
     timeout?: number;
 }
@@ -102,6 +102,14 @@ export interface Entity {
     RowKey: string;
 }
 
+// @public
+export interface GeneratedQueryOptions {
+    filter?: string;
+    format?: OdataMetadataFormat;
+    select?: string;
+    top?: number;
+}
+
 // @public (undocumented)
 export interface GeoReplication {
     lastSyncTime: Date;
@@ -128,7 +136,7 @@ export type GetAccessPolicyResponse = TableGetAccessPolicyHeaders & SignedIdenti
 
 // @public
 export interface GetEntityOptions extends coreHttp.OperationOptions {
-    queryOptions?: QueryOptions;
+    queryOptions?: GeneratedQueryOptions;
     requestId?: string;
     timeout?: number;
 }
@@ -219,11 +227,8 @@ export interface Metrics {
 export type OdataMetadataFormat = "application/json;odata=nometadata" | "application/json;odata=minimalmetadata" | "application/json;odata=fullmetadata";
 
 // @public
-export interface QueryOptions {
-    filter?: string;
-    format?: OdataMetadataFormat;
-    select?: string;
-    top?: number;
+export interface QueryOptions extends Omit<GeneratedQueryOptions, "select"> {
+    select?: string[];
 }
 
 // @public
@@ -382,7 +387,7 @@ export interface TableInsertEntityHeaders {
 
 // @public
 export interface TableInsertEntityOptionalParams extends coreHttp.OperationOptions {
-    queryOptions?: QueryOptions;
+    queryOptions?: GeneratedQueryOptions;
     requestId?: string;
     responsePreference?: ResponseFormat;
     tableEntityProperties?: {
@@ -403,7 +408,7 @@ export interface TableMergeEntityHeaders {
 // @public
 export interface TableMergeEntityOptionalParams extends coreHttp.OperationOptions {
     ifMatch?: string;
-    queryOptions?: QueryOptions;
+    queryOptions?: GeneratedQueryOptions;
     requestId?: string;
     tableEntityProperties?: {
         [propertyName: string]: any;
@@ -425,7 +430,7 @@ export interface TableQueryEntitiesHeaders {
 export interface TableQueryEntitiesOptionalParams extends coreHttp.OperationOptions {
     nextPartitionKey?: string;
     nextRowKey?: string;
-    queryOptions?: QueryOptions;
+    queryOptions?: GeneratedQueryOptions;
     requestId?: string;
     timeout?: number;
 }
@@ -475,7 +480,7 @@ export interface TableQueryHeaders {
 // @public
 export interface TableQueryOptionalParams extends coreHttp.OperationOptions {
     nextTableName?: string;
-    queryOptions?: QueryOptions;
+    queryOptions?: GeneratedQueryOptions;
     requestId?: string;
 }
 
@@ -555,7 +560,7 @@ export interface TableUpdateEntityHeaders {
 // @public
 export interface TableUpdateEntityOptionalParams extends coreHttp.OperationOptions {
     ifMatch?: string;
-    queryOptions?: QueryOptions;
+    queryOptions?: GeneratedQueryOptions;
     requestId?: string;
     tableEntityProperties?: {
         [propertyName: string]: any;

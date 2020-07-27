@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import {
+  QueryOptions as GeneratedQueryOptions,
   TableQueryOptionalParams,
   TableQueryEntitiesOptionalParams,
   TableQueryEntitiesWithPartitionAndRowKeyResponse,
@@ -23,7 +24,7 @@ export interface ListEntitiesResponse<T> extends Omit<TableQueryEntitiesResponse
 }
 
 /**
- * Contains response data for the listEntities operation.
+ * OData query parameters.
  */
 export interface GetEntityResponse<T> extends TableQueryEntitiesWithPartitionAndRowKeyResponse {
   /**
@@ -67,6 +68,16 @@ export type MergeEntityOptions = Omit<
  * Set table access policy optional parameters.
  */
 export type SetAccessPolicyOptions = Omit<TableSetAccessPolicyOptionalParams, "tableAcl">;
+
+/**
+ * Set table access policy optional parameters.
+ */
+export interface QueryOptions extends Omit<GeneratedQueryOptions, "select"> {
+  /**
+   * Select expression using OData notation. Limits the columns on each record to just those requested.
+   */
+  select?: string[];
+}
 
 /**
  * A set of key-value pairs representing the table entity.
