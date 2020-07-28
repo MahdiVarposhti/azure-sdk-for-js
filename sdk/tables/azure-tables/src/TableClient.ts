@@ -9,9 +9,10 @@ import {
   GetEntityResponse,
   CreateEntityOptions,
   UpdateEntityOptions,
-  MergeEntityOptions,
+  UpsertEntityOptions,
   SetAccessPolicyOptions,
-  ListEntitiesResponse
+  ListEntitiesResponse,
+  UpdateMode
 } from "./models";
 import {
   TableServiceClientOptions,
@@ -116,10 +117,11 @@ export class TableClient {
    */
   public updateEntity<T>(
     entity: Entity<T>,
-    ifMatch?: string,
+    mode: UpdateMode = UpdateMode.Replace,
+    eTag: string = "*",
     options?: UpdateEntityOptions
   ): Promise<UpdateEntityResponse> {
-    return this.client.updateEntity<T>(this.tableName, entity, ifMatch, options);
+    return this.client.updateEntity<T>(this.tableName, entity, mode, eTag, options);
   }
 
   /**
@@ -128,12 +130,12 @@ export class TableClient {
    * @param ifMatch Match condition for an entity to be updated. If specified and a matching entity is not found, an error will be raised. To force an unconditional update, set to the wildcard character (*). If not specified, an insert will be performed when no existing entity is found to update and a merge will be performed if an existing entity is found.
    * @param options The options parameters.
    */
-  public mergeEntity<T>(
+  public upsertEntity<T>(
     entity: Entity<T>,
-    ifMatch?: string,
-    options?: MergeEntityOptions
+    mode: UpdateMode = UpdateMode.Replace,
+    options?: UpsertEntityOptions
   ): Promise<MergeEntityResponse> {
-    return this.client.mergeEntity<T>(this.tableName, entity, ifMatch, options);
+    return this.client.upsertEntity<T>(this.tableName, entity, mode, options);
   }
 
   /**

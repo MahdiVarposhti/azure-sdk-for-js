@@ -215,9 +215,6 @@ export interface Logging {
 }
 
 // @public
-export type MergeEntityOptions = Omit<TableMergeEntityOptionalParams, "tableEntityProperties" | "ifMatch">;
-
-// @public
 export type MergeEntityResponse = TableMergeEntityHeaders & {
     _response: coreHttp.HttpResponse & {
         parsedHeaders: TableMergeEntityHeaders;
@@ -320,10 +317,10 @@ export class TableClient {
     getAccessPolicy(options?: GetAccessPolicyOptions): Promise<GetAccessPolicyResponse>;
     getEntity<T extends object>(partitionKey: string, rowKey: string, options?: GetEntityOptions): Promise<GetEntityResponse<T>>;
     listEntities<T extends object>(query?: QueryOptions, options?: ListEntitiesOptions): Promise<ListEntitiesResponse<T>>;
-    mergeEntity<T>(entity: Entity<T>, ifMatch?: string, options?: MergeEntityOptions): Promise<MergeEntityResponse>;
     setAccessPolicy(acl?: SignedIdentifier[], options?: SetAccessPolicyOptions): Promise<SetAccessPolicyResponse>;
     readonly tableName: string;
-    updateEntity<T>(entity: Entity<T>, ifMatch?: string, options?: UpdateEntityOptions): Promise<UpdateEntityResponse>;
+    updateEntity<T>(entity: Entity<T>, mode?: UpdateMode, eTag?: string, options?: UpdateEntityOptions): Promise<UpdateEntityResponse>;
+    upsertEntity<T>(entity: Entity<T>, mode?: UpdateMode, options?: UpsertEntityOptions): Promise<MergeEntityResponse>;
 }
 
 // @public
@@ -536,10 +533,10 @@ export class TableServiceClient {
     getStatistics(options?: GetStatisticsOptions): Promise<GetStatisticsResponse>;
     listEntities<T extends object>(tableName: string, query?: QueryOptions, options?: ListEntitiesOptions): Promise<ListEntitiesResponse<T>>;
     listTables(query?: QueryOptions, options?: ListTablesOptions): Promise<ListTablesResponse>;
-    mergeEntity<T>(tableName: string, entity: Entity<T>, ifMatch?: string, options?: MergeEntityOptions): Promise<MergeEntityResponse>;
     setAccessPolicy(tableName: string, acl?: SignedIdentifier[], options?: SetAccessPolicyOptions): Promise<SetAccessPolicyResponse>;
     setProperties(properties: ServiceProperties, options?: SetPropertiesOptions): Promise<SetPropertiesResponse>;
-    updateEntity<T>(tableName: string, entity: Entity<T>, ifMatch?: string, options?: UpdateEntityOptions): Promise<UpdateEntityResponse>;
+    updateEntity<T>(tableName: string, entity: Entity<T>, mode?: UpdateMode, eTag?: string, options?: UpdateEntityOptions): Promise<UpdateEntityResponse>;
+    upsertEntity<T>(tableName: string, entity: Entity<T>, mode?: UpdateMode, options?: UpsertEntityOptions): Promise<MergeEntityResponse>;
 }
 
 // @public
@@ -597,6 +594,15 @@ export type UpdateEntityResponse = TableUpdateEntityHeaders & {
         parsedHeaders: TableUpdateEntityHeaders;
     };
 };
+
+// @public
+export enum UpdateMode {
+    Merge = 0,
+    Replace = 1
+}
+
+// @public
+export type UpsertEntityOptions = Omit<TableMergeEntityOptionalParams, "tableEntityProperties" | "ifMatch">;
 
 
 // (No @packageDocumentation comment for this package)

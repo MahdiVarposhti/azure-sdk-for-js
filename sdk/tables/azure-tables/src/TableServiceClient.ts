@@ -11,12 +11,13 @@ import {
   ListEntitiesOptions,
   CreateEntityOptions,
   UpdateEntityOptions,
-  MergeEntityOptions,
+  UpsertEntityOptions,
   SetAccessPolicyOptions,
   GetEntityResponse,
   ListEntitiesPageResult,
   ListEntitiesIterator,
-  ListEntitiesResponse
+  ListEntitiesResponse,
+  UpdateMode
 } from "./models";
 import {
   TableServiceClientOptions,
@@ -178,10 +179,19 @@ export class TableServiceClient {
     query?: QueryOptions,
     options?: ListEntitiesOptions
   ): Promise<ListEntitiesResponse<T>> {
-    const pageResult = await this.queryEntities<T>(tableName, query, options);
+    const pageResult = await this.queryEntities<T>(
+      tableName,
+      query,
+      this.setAcceptHeaders(options)
+    );
 
     return {
-      value: this.listEntitiesResults<T>(pageResult, tableName, query, options)
+      value: this.listEntitiesResults<T>(
+        pageResult,
+        tableName,
+        query,
+        this.setAcceptHeaders(options)
+      )
     } as ListEntitiesResponse<T>;
   }
 
@@ -332,14 +342,25 @@ export class TableServiceClient {
   public updateEntity<T>(
     tableName: string,
     entity: Entity<T>,
-    ifMatch?: string,
+    mode: UpdateMode = UpdateMode.Replace,
+    eTag: string = "*",
     options?: UpdateEntityOptions
   ): Promise<UpdateEntityResponse> {
-    return this.table.updateEntity(tableName, entity.PartitionKey, entity.RowKey, {
-      tableEntityProperties: serialize(entity),
-      ifMatch,
-      ...this.setAcceptHeaders(options)
-    });
+    if (mode === UpdateMode.Replace) {
+      return this.table.updateEntity(tableName, entity.PartitionKey, entity.RowKey, {
+        tableEntityProperties: serialize(entity),
+        ifMatch: eTag,
+        ...this.setAcceptHeaders(options)
+      });
+    } else if (mode === UpdateMode.Merge) {
+      return this.table.mergeEntity(tableName, entity.PartitionKey, entity.RowKey, {
+        tableEntityProperties: serialize(entity),
+        ifMatch: eTag,
+        ...this.setAcceptHeaders(options)
+      });
+    } else {
+      throw new Error(`Unexpected value for update mode: ${mode}`);
+    }
   }
 
   /**
@@ -349,17 +370,25 @@ export class TableServiceClient {
    * @param ifMatch Match condition for an entity to be updated. If specified and a matching entity is not found, an error will be raised. To force an unconditional update, set to the wildcard character (*). If not specified, an insert will be performed when no existing entity is found to update and a merge will be performed if an existing entity is found.
    * @param options The options parameters.
    */
-  public mergeEntity<T>(
+  public upsertEntity<T>(
     tableName: string,
     entity: Entity<T>,
-    ifMatch?: string,
-    options?: MergeEntityOptions
+    mode: UpdateMode = UpdateMode.Replace,
+    options?: UpsertEntityOptions
   ): Promise<MergeEntityResponse> {
-    return this.table.mergeEntity(tableName, entity.PartitionKey, entity.RowKey, {
-      tableEntityProperties: serialize(entity),
-      ifMatch,
-      ...this.setAcceptHeaders(options)
-    });
+    if (mode === UpdateMode.Replace) {
+      return this.table.updateEntity(tableName, entity.PartitionKey, entity.RowKey, {
+        tableEntityProperties: serialize(entity),
+        ...this.setAcceptHeaders(options)
+      });
+    } else if (mode === UpdateMode.Merge) {
+      return this.table.mergeEntity(tableName, entity.PartitionKey, entity.RowKey, {
+        tableEntityProperties: serialize(entity),
+        ...this.setAcceptHeaders(options)
+      });
+    } else {
+      throw new Error(`Unexpected value for update mode: ${mode}`);
+    }
   }
 
   /**

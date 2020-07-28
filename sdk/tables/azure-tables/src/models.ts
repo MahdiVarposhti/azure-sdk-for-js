@@ -9,7 +9,7 @@ import {
   TableQueryEntitiesResponse,
   TableInsertEntityOptionalParams,
   TableUpdateEntityOptionalParams,
-  TableMergeEntityOptionalParams,
+  TableMergeEntityOptionalParams as TableUpsertEntityOptionalParams,
   TableSetAccessPolicyOptionalParams
 } from "./generated/models";
 import { PagedAsyncIterableIterator } from "@azure/core-paging";
@@ -95,10 +95,10 @@ export type UpdateEntityOptions = Omit<
 >;
 
 /**
- * Merge entity optional parameters.
+ * Upsert entity optional parameters.
  */
-export type MergeEntityOptions = Omit<
-  TableMergeEntityOptionalParams,
+export type UpsertEntityOptions = Omit<
+  TableUpsertEntityOptionalParams,
   "tableEntityProperties" | "ifMatch"
 >;
 
@@ -130,3 +130,17 @@ export type Entity<T> = T & {
    */
   RowKey: string;
 };
+
+/**
+ * The different modes for Upsert and Update methods.
+ */
+export enum UpdateMode {
+  /**
+   * Updates an entity by updating the entity's properties without replacing the existing entity.
+   */
+  Merge,
+  /**
+   * Updates an existing entity by replacing the entire entity.
+   */
+  Replace
+}
