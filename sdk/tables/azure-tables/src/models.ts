@@ -82,7 +82,7 @@ export interface QueryOptions extends Omit<GeneratedQueryOptions, "select"> {
 /**
  * A set of key-value pairs representing the table entity.
  */
-export interface Entity {
+export type Entity<T> = T & {
   /**
    * The PartitionKey property of the entity.
    */
@@ -91,8 +91,4 @@ export interface Entity {
    * The RowKey property of the entity.
    */
   RowKey: string;
-  /**
-   * Any custom properties of the entity.
-   */
-  [propertyName: string]: any;
-}
+};

@@ -183,9 +183,9 @@ export class TableServiceClient {
    * @param entity The properties for the table entity.
    * @param options The options parameters.
    */
-  public createEntity(
+  public createEntity<T>(
     tableName: string,
-    entity: Entity,
+    entity: Entity<T>,
     options?: CreateEntityOptions
   ): Promise<CreateEntityResponse> {
     return this.table.insertEntity(tableName, {
@@ -221,9 +221,9 @@ export class TableServiceClient {
    * @param ifMatch Match condition for an entity to be updated. If specified and a matching entity is not found, an error will be raised. To force an unconditional update, set to the wildcard character (*). If not specified, an insert will be performed when no existing entity is found to update and a replace will be performed if an existing entity is found.
    * @param options The options parameters.
    */
-  public updateEntity(
+  public updateEntity<T>(
     tableName: string,
-    entity: Entity,
+    entity: Entity<T>,
     ifMatch?: string,
     options?: UpdateEntityOptions
   ): Promise<UpdateEntityResponse> {
@@ -241,9 +241,9 @@ export class TableServiceClient {
    * @param ifMatch Match condition for an entity to be updated. If specified and a matching entity is not found, an error will be raised. To force an unconditional update, set to the wildcard character (*). If not specified, an insert will be performed when no existing entity is found to update and a merge will be performed if an existing entity is found.
    * @param options The options parameters.
    */
-  public mergeEntity(
+  public mergeEntity<T>(
     tableName: string,
-    entity: Entity,
+    entity: Entity<T>,
     ifMatch?: string,
     options?: MergeEntityOptions
   ): Promise<MergeEntityResponse> {

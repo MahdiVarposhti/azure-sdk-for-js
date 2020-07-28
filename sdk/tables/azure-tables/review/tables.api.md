@@ -96,11 +96,10 @@ export class EdmInt64 {
     }
 
 // @public
-export interface Entity {
-    [propertyName: string]: any;
+export type Entity<T> = T & {
     PartitionKey: string;
     RowKey: string;
-}
+};
 
 // @public
 export interface GeneratedQueryOptions {
@@ -142,9 +141,9 @@ export interface GetEntityOptions extends coreHttp.OperationOptions {
 }
 
 // @public
-export interface GetEntityResponse<T> extends TableQueryEntitiesWithPartitionAndRowKeyResponse {
+export type GetEntityResponse<T> = TableQueryEntitiesWithPartitionAndRowKeyResponse & {
     value?: T;
-}
+};
 
 // @public
 export interface GetPropertiesOptions extends coreHttp.OperationOptions {
@@ -180,9 +179,9 @@ export type GetStatisticsResponse = ServiceGetStatisticsHeaders & TableServiceSt
 export type ListEntitiesOptions = Omit<TableQueryEntitiesOptionalParams, "queryOptions">;
 
 // @public
-export interface ListEntitiesResponse<T> extends Omit<TableQueryEntitiesResponse, "value"> {
+export type ListEntitiesResponse<T> = Omit<TableQueryEntitiesResponse, "value"> & {
     value?: T[];
-}
+};
 
 // @public
 export type ListTablesOptions = Omit<TableQueryOptionalParams, "queryOptions">;
@@ -305,15 +304,15 @@ export interface SignedIdentifier {
 // @public
 export class TableClient {
     constructor(url: string, tableName: string, options?: TableServiceClientOptions);
-    createEntity(entity: Entity, options?: CreateEntityOptions): Promise<CreateEntityResponse>;
+    createEntity<T>(entity: Entity<T>, options?: CreateEntityOptions): Promise<CreateEntityResponse>;
     deleteEntity(partitionKey: string, rowKey: string, ifMatch: string, options?: DeleteEntityOptions): Promise<DeleteEntityResponse>;
     getAccessPolicy(options?: GetAccessPolicyOptions): Promise<GetAccessPolicyResponse>;
     getEntity<T extends object>(partitionKey: string, rowKey: string, options?: GetEntityOptions): Promise<GetEntityResponse<T>>;
     listEntities<T extends object>(query?: QueryOptions, options?: ListEntitiesOptions): Promise<ListEntitiesResponse<T>>;
-    mergeEntity(entity: Entity, ifMatch?: string, options?: MergeEntityOptions): Promise<MergeEntityResponse>;
+    mergeEntity<T>(entity: Entity<T>, ifMatch?: string, options?: MergeEntityOptions): Promise<MergeEntityResponse>;
     setAccessPolicy(acl?: SignedIdentifier[], options?: SetAccessPolicyOptions): Promise<SetAccessPolicyResponse>;
     readonly tableName: string;
-    updateEntity(entity: Entity, ifMatch?: string, options?: UpdateEntityOptions): Promise<UpdateEntityResponse>;
+    updateEntity<T>(entity: Entity<T>, ifMatch?: string, options?: UpdateEntityOptions): Promise<UpdateEntityResponse>;
 }
 
 // @public
@@ -509,7 +508,7 @@ export interface TableResponseProperties {
 // @public
 export class TableServiceClient {
     constructor(url: string, options?: TableServiceClientOptions);
-    createEntity(tableName: string, entity: Entity, options?: CreateEntityOptions): Promise<CreateEntityResponse>;
+    createEntity<T>(tableName: string, entity: Entity<T>, options?: CreateEntityOptions): Promise<CreateEntityResponse>;
     createTable(tableName: string, options?: CreateTableOptions): Promise<CreateTableResponse>;
     deleteEntity(tableName: string, partitionKey: string, rowKey: string, ifMatch: string, options?: DeleteEntityOptions): Promise<DeleteEntityResponse>;
     deleteTable(tableName: string, options?: DeleteTableOptions): Promise<DeleteTableResponse>;
@@ -519,10 +518,10 @@ export class TableServiceClient {
     getStatistics(options?: GetStatisticsOptions): Promise<GetStatisticsResponse>;
     listEntities<T extends object>(tableName: string, query?: QueryOptions, options?: ListEntitiesOptions): Promise<ListEntitiesResponse<T>>;
     listTables(query?: QueryOptions, options?: ListTablesOptions): Promise<ListTablesResponse>;
-    mergeEntity(tableName: string, entity: Entity, ifMatch?: string, options?: MergeEntityOptions): Promise<MergeEntityResponse>;
+    mergeEntity<T>(tableName: string, entity: Entity<T>, ifMatch?: string, options?: MergeEntityOptions): Promise<MergeEntityResponse>;
     setAccessPolicy(tableName: string, acl?: SignedIdentifier[], options?: SetAccessPolicyOptions): Promise<SetAccessPolicyResponse>;
     setProperties(properties: ServiceProperties, options?: SetPropertiesOptions): Promise<SetPropertiesResponse>;
-    updateEntity(tableName: string, entity: Entity, ifMatch?: string, options?: UpdateEntityOptions): Promise<UpdateEntityResponse>;
+    updateEntity<T>(tableName: string, entity: Entity<T>, ifMatch?: string, options?: UpdateEntityOptions): Promise<UpdateEntityResponse>;
 }
 
 // @public
