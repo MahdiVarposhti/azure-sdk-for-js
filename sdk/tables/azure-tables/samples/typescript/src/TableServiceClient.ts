@@ -1,56 +1,57 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { TableServiceClient, EdmInt64, EdmGuid, odata } from "../../../";
+import { TableServiceClient, TableClient, UpdateMode, EdmInt64, EdmGuid, odata } from "../../../";
 
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const account = process.env.ACCOUNT_NAME || "";
-const accountSas = process.env.ACCOUNT_SAS || "";
-const accountUrl = `https://${account}.table.core.windows.net${accountSas}`;
+// ================== Authentication ================== //
 
-interface MyEntity {
-  PartitionKey: string;
-  RowKey: string;
-  strProp: string;
-  boolProp: boolean;
-  doubleProp: number;
-  int32Prop: number;
-  int64Prop: EdmInt64;
-  dateProp: Date;
-  guidProp: EdmGuid;
-  binProp: Uint8Array;
-}
+const connectionString = process.env.ACCOUNT_CONNECTION_STRING || "";
+
+const accountName = process.env.ACCOUNT_NAME || "";
+const accountSas = process.env.ACCOUNT_SAS || "";
+const accountUrl = `https://${accountName}.table.core.windows.net${accountSas}`;
+
+const serviceClient = new TableServiceClient(accountUrl);
+// const serviceClient = TableServiceClient.fromConnectionString(connectionString);
+// const serviceClient = new TableServiceClient(accountUrl, new SharedKeyCredential(accountName, accountKey));
+
+const tableClient = TableClient.fromConnectionString(connectionString, "Samples");
+// const tableClient = new TableClient(accountUrl, "Samples");
 
 // ================== Table Operations ================== //
 
 async function createTable() {
-  const serviceClient = new TableServiceClient(accountUrl);
   await serviceClient.createTable("NewTable1");
 }
 
 async function deleteTable() {
-  const serviceClient = new TableServiceClient(accountUrl);
   await serviceClient.deleteTable("NewTable1");
 }
 
 async function createTableError() {
-  const serviceClient = new TableServiceClient(accountUrl);
-  await serviceClient.createTable("Samples");
+  try {
+    await serviceClient.createTable("Samples");
+  } catch (err) {
+    console.log(err.message);
+    // {"odata.error":{"code":"TableAlreadyExists","message":{"lang":"en-US","value":"The table specified already exists."}}}
+  }
 }
 
 async function deleteTableError() {
-  const serviceClient = new TableServiceClient(accountUrl);
-  await serviceClient.deleteTable("DoesntExist");
+  try {
+    await serviceClient.deleteTable("TableDoesntExist");
+  } catch (err) {
+    console.log(err.message);
+    // {"odata.error":{"code":"ResourceNotFound","message":{"lang":"en-US","value":"The specified resource does not exist.}}}
+  }
 }
 
 async function listTables() {
-  const serviceClient = new TableServiceClient(accountUrl);
-
-  const queryName = "Samples";
   const tables = await serviceClient.listTables({
-    //filter: odata`TableName eq ${queryName}`
+    top: 10
   });
 
   console.log(tables.value);
@@ -58,9 +59,20 @@ async function listTables() {
 
 // ================== Entity Operations ================== //
 
-async function createEntity() {
-  const serviceClient = new TableServiceClient(accountUrl);
+interface MyEntity {
+  PartitionKey: string;
+  RowKey: string;
+  strProp?: string;
+  boolProp?: boolean;
+  doubleProp?: number;
+  int32Prop?: number;
+  int64Prop?: EdmInt64;
+  dateProp?: Date;
+  guidProp?: EdmGuid;
+  binProp?: Uint8Array;
+}
 
+async function createEntity() {
   const newEntity: MyEntity = {
     PartitionKey: "Part2",
     RowKey: "Row1",
@@ -73,79 +85,66 @@ async function createEntity() {
     guidProp: new EdmGuid("123e4567-e89b-12d3-a456-426614174000"),
     binProp: Buffer.from([84, 101, 115, 116])
   };
-
-  await serviceClient.createEntity("Samples", newEntity);
+  await tableClient.createEntity(newEntity);
 }
 
 async function deleteEntity() {
-  const serviceClient = new TableServiceClient(accountUrl);
   await serviceClient.deleteEntity("Samples", "Part1", "Row4", "*");
 }
 
 async function updateEntity() {
-  const serviceClient = new TableServiceClient(accountUrl);
+  const newEntity: MyEntity = {
+    PartitionKey: "Part2",
+    RowKey: "Row1",
+    strProp: "Updated String Value",
+    dateProp: new Date()
+  };
 
-  const queryName = "Mahdi";
-  // const entities = await serviceClient.updateEntity("Samples");
+  await tableClient.updateEntity(newEntity, UpdateMode.Merge);
+}
 
-  //console.log(entities);
+async function upsertEntity() {
+  const newEntity: MyEntity = {
+    PartitionKey: "Part2",
+    RowKey: "Row2",
+    strProp: "New Value",
+    dateProp: new Date()
+  };
+
+  await tableClient.upsertEntity(newEntity, UpdateMode.Replace);
 }
 
 async function getEntity() {
-  const serviceClient = new TableServiceClient(accountUrl);
-  const entity = await serviceClient.getEntity<MyEntity>("Samples", "Part2", "Row1");
+  const entity = await tableClient.getEntity<MyEntity>("Part2", "Row1");
 
   console.log(entity.value);
 }
 
 async function listEntities() {
-  const serviceClient = new TableServiceClient(accountUrl);
-
   const queryString = "String Value";
   const entities = await serviceClient.listEntities<MyEntity>("Samples", {
     select: ["strProp", "int64Prop", "guidProp", "binProp"],
     filter: odata`strProp eq ${queryString}`
   });
 
-  console.log(entities.value);
+  for await (const entity of entities.value) {
+    console.log(entity);
+  }
 }
 
 async function main() {
-  // const ents = await tableServiceClient.listEntities<Data>(
-  //   "Samples",
-  //   {
-  //     filter: "RowKey eq 'Row5'"
-  //   },
-  //   {
-  //     requestOptions: {
-  //       customHeaders: { accept: "application/json" }
-  //     }
-  //   }
-  // );
-
-  // console.log(ents);
-
-  // let name = "Mahdi";
-
-  // let res = await tableServiceClient.listEntities<Person>(
-  //   "Samples",
-  //   {
-  //     select: ["name", "Age"],
-  //     filter: odata`name eq ${name}`
-  //   },
-  //   {
-  //     requestOptions: {
-  //       customHeaders: { accept: "application/json" }
-  //     }
-  //   }
-  // );
-
-  // console.log(res.value);
-
-  await listTables();
+  // Table Operations
   await createTable();
   await deleteTable();
-  // await createEntity();
+  await createTableError();
+  await deleteTableError();
+  await listTables();
+
+  // Entity Operations
+  await createEntity();
+  await deleteEntity();
+  await updateEntity();
+  await upsertEntity();
   await getEntity();
   await listEntities();
 }
