@@ -72,7 +72,7 @@ export class TableServiceClient {
    * @param options The options parameters.
    */
   public getStatistics(options?: GetStatisticsOptions): Promise<GetStatisticsResponse> {
-    return this.service.getStatistics(options);
+    return this.service.getStatistics(this.setAcceptHeaders(options));
   }
 
   /**
@@ -81,7 +81,7 @@ export class TableServiceClient {
    * @param options The options parameters.
    */
   public getProperties(options?: GetPropertiesOptions): Promise<GetPropertiesResponse> {
-    return this.service.getProperties(options);
+    return this.service.getProperties(this.setAcceptHeaders(options));
   }
 
   /**
@@ -94,7 +94,7 @@ export class TableServiceClient {
     properties: ServiceProperties,
     options?: SetPropertiesOptions
   ): Promise<SetPropertiesResponse> {
-    return this.service.setProperties(properties, options);
+    return this.service.setProperties(properties, this.setAcceptHeaders(options));
   }
 
   /**
@@ -106,7 +106,10 @@ export class TableServiceClient {
     tableName: string,
     options?: CreateTableOptions
   ): Promise<CreateTableResponse> {
-    return this.table.create({ tableName }, { ...options, responsePreference: "return-content" });
+    return this.table.create(
+      { tableName },
+      { ...this.setAcceptHeaders(options), responsePreference: "return-content" }
+    );
   }
 
   /**
@@ -118,7 +121,7 @@ export class TableServiceClient {
     tableName: string,
     options?: DeleteTableOptions
   ): Promise<DeleteTableResponse> {
-    return this.table.delete(tableName, options);
+    return this.table.delete(tableName, this.setAcceptHeaders(options));
   }
 
   /**
@@ -131,7 +134,10 @@ export class TableServiceClient {
     query?: QueryOptions,
     options?: ListTablesOptions
   ): Promise<ListTablesResponse> {
-    return this.table.query({ queryOptions: this.convertQueryOptions(query), ...options });
+    return this.table.query({
+      queryOptions: this.convertQueryOptions(query),
+      ...this.setAcceptHeaders(options)
+    });
   }
 
   /**
@@ -151,7 +157,7 @@ export class TableServiceClient {
       tableName,
       partitionKey,
       rowKey,
-      options
+      this.setAcceptHeaders(options)
     )) as GetEntityResponse<T>;
     response.value = deserialize<T>(response._response.parsedBody);
     return response;
@@ -171,7 +177,7 @@ export class TableServiceClient {
   ): Promise<ListEntitiesResponse<T>> {
     const response = (await this.table.queryEntities(tableName, {
       queryOptions: this.convertQueryOptions(query),
-      ...options
+      ...this.setAcceptHeaders(options)
     })) as ListEntitiesResponse<T>;
     response.value = deserializeObjectsArray<T>(response.value);
     return response;
@@ -190,7 +196,7 @@ export class TableServiceClient {
   ): Promise<CreateEntityResponse> {
     return this.table.insertEntity(tableName, {
       tableEntityProperties: serialize(entity),
-      ...options
+      ...this.setAcceptHeaders(options)
     });
   }
 
@@ -211,7 +217,13 @@ export class TableServiceClient {
     ifMatch: string,
     options?: DeleteEntityOptions
   ): Promise<DeleteEntityResponse> {
-    return this.table.deleteEntity(tableName, partitionKey, rowKey, ifMatch, options);
+    return this.table.deleteEntity(
+      tableName,
+      partitionKey,
+      rowKey,
+      ifMatch,
+      this.setAcceptHeaders(options)
+    );
   }
 
   /**
@@ -230,7 +242,7 @@ export class TableServiceClient {
     return this.table.updateEntity(tableName, entity.PartitionKey, entity.RowKey, {
       tableEntityProperties: serialize(entity),
       ifMatch,
-      ...options
+      ...this.setAcceptHeaders(options)
     });
   }
 
@@ -250,7 +262,7 @@ export class TableServiceClient {
     return this.table.mergeEntity(tableName, entity.PartitionKey, entity.RowKey, {
       tableEntityProperties: serialize(entity),
       ifMatch,
-      ...options
+      ...this.setAcceptHeaders(options)
     });
   }
 
@@ -287,5 +299,14 @@ export class TableServiceClient {
       mappedQuery.select = mappedQuery.select.join(",");
     }
     return mappedQuery;
+  }
+
+  // This is a temporary fix to https://github.com/Azure/autorest.typescript/issues/697
+  private setAcceptHeaders(obj: any = {}): object {
+    obj = JSON.parse(JSON.stringify(obj));
+    obj.requestOptions = obj.requestOptions || {};
+    obj.requestOptions.customHeaders = obj.requestOptions.customHeaders || {};
+    obj.requestOptions.customHeaders.accept = "application/json";
+    return obj;
   }
 }
