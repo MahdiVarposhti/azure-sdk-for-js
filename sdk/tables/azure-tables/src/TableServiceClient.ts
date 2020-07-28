@@ -9,12 +9,14 @@ import {
   QueryOptions,
   ListTablesOptions,
   ListEntitiesOptions,
-  GetEntityResponse,
-  ListEntitiesResponse,
   CreateEntityOptions,
   UpdateEntityOptions,
   MergeEntityOptions,
-  SetAccessPolicyOptions
+  SetAccessPolicyOptions,
+  GetEntityResponse,
+  ListEntitiesPageResult,
+  ListEntitiesIterator,
+  ListEntitiesResult
 } from "./models";
 import {
   TableServiceClientOptions,
@@ -43,6 +45,7 @@ import {
   SetAccessPolicyResponse
 } from "./generatedModels";
 import { serialize, deserialize, deserializeObjectsArray } from "./serialization";
+import { getClientParamsFromConnectionString } from "./utils/connectionString";
 
 /**
  * A TableServiceClient represents a Client to the Azure Tables service allowing you
@@ -174,13 +177,106 @@ export class TableServiceClient {
     // eslint-disable-next-line @azure/azure-sdk/ts-naming-options
     query?: QueryOptions,
     options?: ListEntitiesOptions
-  ): Promise<ListEntitiesResponse<T>> {
-    const response = (await this.table.queryEntities(tableName, {
+  ): Promise<ListEntitiesResult<T>> {
+    const pageResult = await this.queryEntities<T>(tableName, query, options);
+
+    return {
+      value: this.listEntitiesResults<T>(pageResult, tableName, query, options)
+    };
+  }
+
+  private listEntitiesResults<T extends object>(
+    firstPage: ListEntitiesPageResult<T>,
+    tableName: string,
+    // eslint-disable-next-line @azure/azure-sdk/ts-naming-options
+    query?: QueryOptions,
+    options?: ListEntitiesOptions
+  ): ListEntitiesIterator<T> {
+    const iter = this.listEntitiesAll<T>(firstPage, tableName, query, options);
+
+    return {
+      next() {
+        return iter.next();
+      },
+      [Symbol.asyncIterator]() {
+        return this;
+      },
+      byPage: () => {
+        return this.listEntitiesPage(tableName, query, options);
+      }
+    };
+  }
+
+  private async *listEntitiesAll<T extends object>(
+    firstPage: ListEntitiesPageResult<T>,
+    tableName: string,
+    // eslint-disable-next-line @azure/azure-sdk/ts-naming-options
+    query?: QueryOptions,
+    options?: ListEntitiesOptions
+  ): AsyncIterableIterator<T> {
+    const { nextPartitionKey, nextRowKey } = firstPage.continuationToken;
+    yield* firstPage.value;
+    if (nextRowKey && nextPartitionKey) {
+      const optionsWithContinuation: ListEntitiesOptions = {
+        ...options,
+        nextPartitionKey,
+        nextRowKey
+      };
+      for await (const page of this.listEntitiesPage<T>(
+        tableName,
+        query,
+        optionsWithContinuation
+      )) {
+        yield* page.value;
+      }
+    }
+  }
+
+  private async *listEntitiesPage<T extends object>(
+    tableName: string,
+    // eslint-disable-next-line @azure/azure-sdk/ts-naming-options
+    query?: QueryOptions,
+    options?: ListEntitiesOptions
+  ): AsyncIterableIterator<ListEntitiesPageResult<T>> {
+    let result = await this.queryEntities<T>(tableName, query, options);
+
+    yield result;
+
+    while (result.continuationToken.nextPartitionKey && result.continuationToken.nextRowKey) {
+      const optionsWithContinuation: ListEntitiesOptions = {
+        ...options,
+        nextPartitionKey: result.continuationToken.nextPartitionKey,
+        nextRowKey: result.continuationToken.nextRowKey
+      };
+      result = await this.queryEntities(tableName, query, optionsWithContinuation);
+      yield result;
+    }
+  }
+
+  private async queryEntities<T extends object>(
+    tableName: string,
+    // eslint-disable-next-line @azure/azure-sdk/ts-naming-options
+    query?: QueryOptions,
+    options?: ListEntitiesOptions
+  ): Promise<ListEntitiesPageResult<T>> {
+    const {
+      value,
+      xMsContinuationNextPartitionKey,
+      xMsContinuationNextRowKey
+    } = await this.table.queryEntities(tableName, {
       queryOptions: this.convertQueryOptions(query),
-      ...this.setAcceptHeaders(options)
-    })) as ListEntitiesResponse<T>;
-    response.value = deserializeObjectsArray<T>(response.value);
-    return response;
+      ...options
+    });
+
+    const converted: ListEntitiesPageResult<T> = {
+      value: value as T[], // TODO: deserialize value
+      continuationToken: {
+        nextPartitionKey: xMsContinuationNextPartitionKey,
+        nextRowKey: xMsContinuationNextRowKey
+      }
+    };
+
+    return converted;
   }
 
   /**
@@ -308,5 +404,31 @@ export class TableServiceClient {
     obj.requestOptions.customHeaders = obj.requestOptions.customHeaders || {};
     obj.requestOptions.customHeaders.accept = "application/json";
     return obj;
+  }
+  /**
+   *
+   * Creates an instance of TableServiceClient from connection string.
+   *
+   * @param {string} connectionString Account connection string or a SAS connection string of an Azure storage account.
+   *                                  [ Note - Account connection string can only be used in NODE.JS runtime. ]
+   *                                  Account connection string example -
+   *                                  `DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=accountKey;EndpointSuffix=core.windows.net`
+   *                                  SAS connection string example -
+   *                                  `BlobEndpoint=https://myaccount.table.core.windows.net/;QueueEndpoint=https://myaccount.queue.core.windows.net/;FileEndpoint=https://myaccount.file.core.windows.net/;TableEndpoint=https://myaccount.table.core.windows.net/;SharedAccessSignature=sasString`
+   * @param {TableServiceClientOptions} [options] Options to configure the HTTP pipeline.
+   * @returns {TableServiceClient} A new TableServiceClient from the given connection string.
+   * @memberof TableServiceClient
+   */
+
+  public static fromConnectionString(
+    connectionString: string,
+    // eslint-disable-next-line @azure/azure-sdk/ts-naming-options
+    options?: TableServiceClientOptions
+  ): TableServiceClient {
+    const { url, options: clientOptions } = getClientParamsFromConnectionString(
+      connectionString,
+      options
+    );
+    return new TableServiceClient(url, clientOptions);
   }
 }

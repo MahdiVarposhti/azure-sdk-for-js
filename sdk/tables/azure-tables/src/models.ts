@@ -10,8 +10,53 @@ import {
   TableInsertEntityOptionalParams,
   TableUpdateEntityOptionalParams,
   TableMergeEntityOptionalParams,
-  TableSetAccessPolicyOptionalParams
+  TableSetAccessPolicyOptionalParams,
+  TableQueryEntitiesResponse,
+  TableQueryEntitiesWithPartitionAndRowKeyResponse
 } from "./generated/models";
+import { PagedAsyncIterableIterator } from "@azure/core-paging";
+
+export interface TableEntityContinuationToken {
+  nextPartitionKey?: string;
+  nextRowKey?: string;
+}
+
+export interface ListEntitiesResult<T extends object> {
+  readonly value: ListEntitiesIterator<T>;
+}
+
+export interface ListEntitiesPageResult<T extends object> {
+  readonly value: T[];
+  continuationToken: TableEntityContinuationToken;
+}
+
+export type ListEntitiesIterator<T extends object> = PagedAsyncIterableIterator<
+  T,
+  ListEntitiesPageResult<T>,
+  {}
+>;
+
+/**
+ * Contains response data for the getEntity operation.
+ */
+export type ListEntitiesResponse<T extends object> = Omit<TableQueryEntitiesResponse, "value"> & {
+  /**
+   * List of table entities.
+   */
+  value?: T[];
+};
+
+/**
+ * Contains response data for the listEntities operation.
+ */
+export type GetEntityResponse<
+  T extends object
+> = TableQueryEntitiesWithPartitionAndRowKeyResponse & {
+  /**
+   * The table entity object.
+   */
+  value?: T;
+};
 
 /**
  * Contains response data for the getEntity operation.

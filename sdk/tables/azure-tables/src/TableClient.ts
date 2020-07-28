@@ -11,7 +11,9 @@ import {
   CreateEntityOptions,
   UpdateEntityOptions,
   MergeEntityOptions,
-  SetAccessPolicyOptions
+  SetAccessPolicyOptions,
+  GetEntityResponse,
+  ListEntitiesResult
 } from "./models";
 import {
   TableServiceClientOptions,
@@ -26,6 +28,7 @@ import {
   SignedIdentifier,
   SetAccessPolicyResponse
 } from "./generatedModels";
+import { getClientParamsFromConnectionString } from "./utils/connectionString";
 
 /**
  * A TableClient represents a Client to the Azure Tables service allowing you
@@ -73,7 +76,7 @@ export class TableClient {
     // eslint-disable-next-line @azure/azure-sdk/ts-naming-options
     query?: QueryOptions,
     options?: ListEntitiesOptions
-  ): Promise<ListEntitiesResponse<T>> {
+  ): Promise<ListEntitiesResult<T>> {
     return this.client.listEntities<T>(this.tableName, query, options);
   }
 
@@ -154,5 +157,32 @@ export class TableClient {
     options?: SetAccessPolicyOptions
   ): Promise<SetAccessPolicyResponse> {
     return this.client.setAccessPolicy(this.tableName, acl, options);
+  }
+
+  /**
+   *
+   * Creates an instance of TableClient from connection string.
+   *
+   * @param {string} connectionString Account connection string or a SAS connection string of an Azure storage account.
+   *                                  [ Note - Account connection string can only be used in NODE.JS runtime. ]
+   *                                  Account connection string example -
+   *                                  `DefaultEndpointsProtocol=https;AccountName=myaccount;AccountKey=accountKey;EndpointSuffix=core.windows.net`
+   *                                  SAS connection string example -
+   *                                  `BlobEndpoint=https://myaccount.table.core.windows.net/;QueueEndpoint=https://myaccount.queue.core.windows.net/;FileEndpoint=https://myaccount.file.core.windows.net/;TableEndpoint=https://myaccount.table.core.windows.net/;SharedAccessSignature=sasString`
+   * @param {TableServiceClientOptions} [options] Options to configure the HTTP pipeline.
+   * @returns {TableClient} A new TableClient from the given connection string.
+   * @memberof TableClient
+   */
+  public static fromConnectionString(
+    connectionString: string,
+    tableName: string,
+    // eslint-disable-next-line @azure/azure-sdk/ts-naming-options
+    options?: TableServiceClientOptions
+  ): TableClient {
+    const { url, options: clientOptions } = getClientParamsFromConnectionString(
+      connectionString,
+      options
+    );
+    return new TableClient(url, tableName, clientOptions);
   }
 }
