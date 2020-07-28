@@ -16,7 +16,7 @@ import {
   GetEntityResponse,
   ListEntitiesPageResult,
   ListEntitiesIterator,
-  ListEntitiesResult
+  ListEntitiesResponse
 } from "./models";
 import {
   TableServiceClientOptions,
@@ -177,12 +177,12 @@ export class TableServiceClient {
     // eslint-disable-next-line @azure/azure-sdk/ts-naming-options
     query?: QueryOptions,
     options?: ListEntitiesOptions
-  ): Promise<ListEntitiesResult<T>> {
+  ): Promise<ListEntitiesResponse<T>> {
     const pageResult = await this.queryEntities<T>(tableName, query, options);
 
     return {
       value: this.listEntitiesResults<T>(pageResult, tableName, query, options)
-    };
+    } as ListEntitiesResponse<T>;
   }
 
   private listEntitiesResults<T extends object>(
@@ -269,7 +269,7 @@ export class TableServiceClient {
     });
 
     const converted: ListEntitiesPageResult<T> = {
-      value: value as T[], // TODO: deserialize value
+      value: deserializeObjectsArray<T>(value), // TODO: deserialize value
       continuationToken: {
         nextPartitionKey: xMsContinuationNextPartitionKey,
         nextRowKey: xMsContinuationNextRowKey

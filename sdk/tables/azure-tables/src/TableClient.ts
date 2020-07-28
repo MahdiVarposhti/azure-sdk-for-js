@@ -7,13 +7,11 @@ import {
   QueryOptions,
   ListEntitiesOptions,
   GetEntityResponse,
-  ListEntitiesResponse,
   CreateEntityOptions,
   UpdateEntityOptions,
   MergeEntityOptions,
   SetAccessPolicyOptions,
-  GetEntityResponse,
-  ListEntitiesResult
+  ListEntitiesResponse
 } from "./models";
 import {
   TableServiceClientOptions,
@@ -76,7 +74,7 @@ export class TableClient {
     // eslint-disable-next-line @azure/azure-sdk/ts-naming-options
     query?: QueryOptions,
     options?: ListEntitiesOptions
-  ): Promise<ListEntitiesResult<T>> {
+  ): Promise<ListEntitiesResponse<T>> {
     return this.client.listEntities<T>(this.tableName, query, options);
   }
 

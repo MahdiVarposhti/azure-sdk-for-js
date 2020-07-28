@@ -10,26 +10,41 @@ import {
   TableInsertEntityOptionalParams,
   TableUpdateEntityOptionalParams,
   TableMergeEntityOptionalParams,
-  TableSetAccessPolicyOptionalParams,
-  TableQueryEntitiesResponse,
-  TableQueryEntitiesWithPartitionAndRowKeyResponse
+  TableSetAccessPolicyOptionalParams
 } from "./generated/models";
 import { PagedAsyncIterableIterator } from "@azure/core-paging";
 
+/**
+ * Contains the next PartitionKey and RowKey for the continuation of pagable results.
+ */
 export interface TableEntityContinuationToken {
+  /**
+   * Hash of the next partition key to be returned in a subsequent query against the table.
+   */
   nextPartitionKey?: string;
+  /**
+   * Hash of the next row key to be returned in a subsequent query against the table.
+   */
   nextRowKey?: string;
 }
 
-export interface ListEntitiesResult<T extends object> {
-  readonly value: ListEntitiesIterator<T>;
-}
-
+/**
+ * A single page in pagable listEntities results.
+ */
 export interface ListEntitiesPageResult<T extends object> {
+  /**
+   * The list of table entities in the current page.
+   */
   readonly value: T[];
+  /**
+   * Contains the PartitionKey and RowKey of the next page result.
+   */
   continuationToken: TableEntityContinuationToken;
 }
 
+/**
+ * The iterator for the list of entities in listEntities operation.
+ */
 export type ListEntitiesIterator<T extends object> = PagedAsyncIterableIterator<
   T,
   ListEntitiesPageResult<T>,
@@ -43,29 +58,7 @@ export type ListEntitiesResponse<T extends object> = Omit<TableQueryEntitiesResp
   /**
    * List of table entities.
    */
-  value?: T[];
-};
-
-/**
- * Contains response data for the listEntities operation.
- */
-export type GetEntityResponse<
-  T extends object
-> = TableQueryEntitiesWithPartitionAndRowKeyResponse & {
-  /**
-   * The table entity object.
-   */
-  value?: T;
-};
-
-/**
- * Contains response data for the getEntity operation.
- */
-export type ListEntitiesResponse<T> = Omit<TableQueryEntitiesResponse, "value"> & {
-  /**
-   * List of table entities.
-   */
-  value?: T[];
+  readonly value: ListEntitiesIterator<T>;
 };
 
 /**
